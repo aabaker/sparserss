@@ -1,5 +1,32 @@
+# Built application files
+*.apk
+*.ap_
+
+# Files for the Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
 bin/
 gen/
+
+# Gradle files
+.gradle/
+build/
+/*/build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log Files
+*.log
+
+# Project specific files
 authors.txt
 keystore
-.settings
+
+# Android studio files
+.idea/workspace.xml
+.idea/tasks.xml
