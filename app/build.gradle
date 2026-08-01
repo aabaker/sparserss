@@ -1,13 +1,21 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 15
-    buildToolsVersion "22.0.1"
+    namespace 'de.shandschuh.sparserss'
+
+    compileSdk 35
 
     defaultConfig {
         applicationId "de.shandschuh.sparserss"
-        minSdkVersion 3
-        targetSdkVersion 11
+        minSdk 21
+        targetSdk 35
+        versionCode 87
+        versionName "1.7"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     buildTypes {
@@ -16,4 +24,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+
+    lint {
+        lintConfig file('lint.xml')
+        abortOnError false
+    }
+}
+
+dependencies {
+    // Provides NotificationCompat/NotificationManagerCompat
+    implementation 'androidx.core:core:1.13.1'
 }

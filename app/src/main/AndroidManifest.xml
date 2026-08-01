@@ -1,16 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="de.shandschuh.sparserss"
-      android:versionCode="87" android:versionName="1.7"
       android:installLocation="auto">
-    <uses-sdk android:minSdkVersion="3" android:targetSdkVersion="11"/>
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    
-    <!-- Android 1.5 requires this  -->
+
     <uses-permission android:name="de.shandschuh.sparserss.READFEEDS"/>
     <uses-permission android:name="de.shandschuh.sparserss.WRITEFEEDS"/>
     
@@ -27,8 +23,6 @@
     <application
         android:icon="@drawable/icon"
         android:label="@string/app_name"
-        android:allowClearUserData="true"
-        android:testOnly="false"
         android:allowBackup="true">
         <service android:name=".service.RefreshService"/>
         <service android:name=".service.FetcherService"/>
@@ -37,7 +31,7 @@
             android:authorities="de.shandschuh.sparserss.provider.FeedData"
             android:readPermission="de.shandschuh.sparserss.READFEEDS"
             android:writePermission="de.shandschuh.sparserss.WRITEFEEDS"/>
-        <activity android:name=".MainTabActivity" android:label="@string/app_name" android:launchMode="singleTask">
+        <activity android:name=".MainTabActivity" android:label="@string/app_name" android:launchMode="singleTask" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -45,14 +39,14 @@
         </activity>
         <activity android:name=".RSSOverview" android:launchMode="singleTask" />
         <activity android:name=".EmptyActivity"/>
-        <activity android:name=".EntriesListActivity" android:launchMode="singleTask">
+        <activity android:name=".EntriesListActivity" android:launchMode="singleTask" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="vnd.android.cursor.dir/vnd.feeddata.entry" />
             </intent-filter>
         </activity>
-        <activity android:name=".EntryActivity" android:launchMode="singleTask">
+        <activity android:name=".EntryActivity" android:launchMode="singleTask" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -60,12 +54,12 @@
             </intent-filter>
         </activity>
         <activity android:name=".ApplicationPreferencesActivity"/>
-        <activity android:name=".widget.WidgetConfigActivity">
+        <activity android:name=".widget.WidgetConfigActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
-        <activity android:name=".FeedConfigActivity">
+        <activity android:name=".FeedConfigActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.EDIT"/>
                 <category android:name="android.intent.category.DEFAULT"/>
@@ -77,7 +71,7 @@
                 <data android:mimeType="vnd.android.cursor.dir/vnd.feeddata.feed"/>
             </intent-filter>
         </activity>
-        <receiver android:name=".widget.SparseRSSAppWidgetProvider" >
+        <receiver android:name=".widget.SparseRSSAppWidgetProvider" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="de.shandschuh.sparserss.FEEDUPDATED" />
@@ -85,13 +79,13 @@
             <meta-data android:name="android.appwidget.provider"
                        android:resource="@xml/widgetinfo" />
         </receiver>
-        <receiver android:name=".RefreshBroadcastReceiver" >
+        <receiver android:name=".RefreshBroadcastReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="de.shandschuh.sparserss.REFRESH" />
                 <action android:name="de.shandschuh.sparserss.STOPREFRESH" />
             </intent-filter>
         </receiver>
-        <receiver android:name=".BootCompletedBroadcastReceiver" >
+        <receiver android:name=".BootCompletedBroadcastReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
