@@ -1,5 +1,20 @@
 apply plugin: 'com.android.application'
 
+// The keystore itself (file name "keystore") lives at the project root and is gitignored -
+// it must never be committed. Credentials are supplied at build time via environment
+// variables (or -P... properties / ~/.gradle/gradle.properties), never hardcoded here or
+// written to any file that gets checked in.
+def releaseStoreFile = findProperty('RELEASE_STORE_FILE') ?: System.getenv('RELEASE_STORE_FILE') ?: "${rootDir}/keystore"
+def releaseStorePassword = findProperty('RELEASE_STORE_PASSWORD') ?: System.getenv('RELEASE_STORE_PASSWORD')
+def releaseKeyAlias = findProperty('RELEASE_KEY_ALIAS') ?: System.getenv('RELEASE_KEY_ALIAS')
+def releaseKeyPassword = findProperty('RELEASE_KEY_PASSWORD') ?: System.getenv('RELEASE_KEY_PASSWORD')
+
+// AGP requires a signingConfig to be either fully specified or not referenced at all by a
+// buildType - a partially-configured one fails packageRelease with "missing required
+// property". So only wire it up when every piece is actually present; otherwise the release
+// buildType stays unsigned (still builds fine, just isn't a distributable APK).
+def hasReleaseSigning = releaseStorePassword && releaseKeyAlias && releaseKeyPassword && file(releaseStoreFile).exists()
+
 android {
     namespace 'de.shandschuh.sparserss'
 
@@ -18,10 +33,24 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
+    if (hasReleaseSigning) {
+        signingConfigs {
+            release {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 
