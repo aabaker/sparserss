@@ -25,9 +25,6 @@
 
 package de.shandschuh.sparserss;
 
-import java.io.File;
-import java.io.FilenameFilter;
-
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
@@ -43,7 +40,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -67,43 +63,47 @@ import de.shandschuh.sparserss.service.RefreshService;
 
 public class RSSOverview extends ListActivity implements Requeryable {
 	private static final int DIALOG_ERROR_FEEDIMPORT = 3;
-	
+
 	private static final int DIALOG_ERROR_FEEDEXPORT = 4;
-	
+
 	private static final int DIALOG_ERROR_INVALIDIMPORTFILE = 5;
-	
+
 	private static final int DIALOG_ERROR_EXTERNALSTORAGENOTAVAILABLE = 6;
-	
+
 	private static final int DIALOG_ABOUT = 7;
-	
+
 	private static final int CONTEXTMENU_EDIT_ID = 3;
-	
+
 	private static final int CONTEXTMENU_REFRESH_ID = 4;
-	
+
 	private static final int CONTEXTMENU_DELETE_ID = 5;
-	
+
 	private static final int CONTEXTMENU_MARKASREAD_ID = 6;
-	
+
 	private static final int CONTEXTMENU_MARKASUNREAD_ID = 7;
-	
+
 	private static final int CONTEXTMENU_DELETEREAD_ID = 8;
-	
+
 	private static final int CONTEXTMENU_DELETEALLENTRIES_ID = 9;
-	
+
 	private static final int CONTEXTMENU_RESETUPDATEDATE_ID = 10;
-	
+
 	private static final int ACTIVITY_APPLICATIONPREFERENCES_ID = 1;
-	
+
+	private static final int ACTIVITY_IMPORTOPML_ID = 2;
+
+	private static final int ACTIVITY_EXPORTOPML_ID = 3;
+
 	private static final Uri CANGELOG_URI = Uri.parse("http://code.google.com/p/sparserss/wiki/Changelog");
-	
+
 	static NotificationManager notificationManager; // package scope
-	
+
 	boolean feedSort;
-	
+
 	private RSSOverviewListAdapter listAdapter;
-	
+
 	private Menu menu;
-	
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -111,7 +111,7 @@ public class RSSOverview extends ListActivity implements Requeryable {
 			setTheme(R.style.Theme_Light);
 		}
 		super.onCreate(savedInstanceState);
-		
+
 		if (notificationManager == null) {
 			notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		}
@@ -133,17 +133,17 @@ public class RSSOverview extends ListActivity implements Requeryable {
 		});
 		getListView().setOnTouchListener(new OnTouchListener() {
 			private int dragedItem = -1;
-			
+
 			private ImageView dragedView;
-			
+
 			private WindowManager windowManager = RSSOverview.this.getWindowManager();
-			
+
 			private LayoutParams layoutParams;
-			
+
 			private int minY;
-			
+
 			private ListView listView = getListView();
-			
+
 			public boolean onTouch(View v, MotionEvent event) {
 				if (feedSort) {
 					int action = event.getAction();
@@ -457,48 +457,27 @@ public class RSSOverview extends ListActivity implements Requeryable {
 				break;
 			}
 			case R.id.menu_import: {
-				if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED) ||Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED_READ_ONLY)) {
-					final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-					
-					builder.setTitle(R.string.select_file);
-					
-					try {
-						final String[] fileNames = Environment.getExternalStorageDirectory().list(new FilenameFilter() {
-							public boolean accept(File dir, String filename) {
-								return new File(dir, filename).isFile();
-							}
-						});
-						builder.setItems(fileNames, new DialogInterface.OnClickListener()  {
-							public void onClick(DialogInterface dialog, int which) {
-								try {
-									OPML.importFromFile(new StringBuilder(Environment.getExternalStorageDirectory().toString()).append(File.separator).append(fileNames[which]).toString(), RSSOverview.this);
-								} catch (Exception e) {
-									showDialog(DIALOG_ERROR_FEEDIMPORT);
-								}
-							}
-						});
-						builder.show();
-					} catch (Exception e) {
-						showDialog(DIALOG_ERROR_FEEDIMPORT);
-					}
-				} else {
-					showDialog(DIALOG_ERROR_EXTERNALSTORAGENOTAVAILABLE);
-				}
+				Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
 				
+				intent.addCategory(Intent.CATEGORY_OPENABLE);
+				intent.setType("*/*"); // OPML files don't have a reliably-registered MIME type across file managers
+				try {
+					startActivityForResult(intent, ACTIVITY_IMPORTOPML_ID);
+				} catch (Exception e) { // no document picker available on this device
+					showDialog(DIALOG_ERROR_FEEDIMPORT);
+				}
 				break;
 			}
 			case R.id.menu_export: {
-				if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED) ||Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED_READ_ONLY)) {
-					try {
-						String filename = new StringBuilder(Environment.getExternalStorageDirectory().toString()).append("/sparse_rss_").append(System.currentTimeMillis()).append(".opml").toString();
-						
-						OPML.exportToFile(filename, this);
-						Toast.makeText(this, String.format(getString(R.string.message_exportedto), filename), Toast.LENGTH_LONG).show();
-					} catch (Exception e) {
-						showDialog(DIALOG_ERROR_FEEDEXPORT);
-					}
-				} else {
-					showDialog(DIALOG_ERROR_EXTERNALSTORAGENOTAVAILABLE);
+				Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+				
+				intent.addCategory(Intent.CATEGORY_OPENABLE);
+				intent.setType("text/xml");
+				intent.putExtra(Intent.EXTRA_TITLE, new StringBuilder("sparse_rss_").append(System.currentTimeMillis()).append(".opml").toString());
+				try {
+					startActivityForResult(intent, ACTIVITY_EXPORTOPML_ID);
+				} catch (Exception e) { // no document picker available on this device
+					showDialog(DIALOG_ERROR_FEEDEXPORT);
 				}
 				break;
 			}
@@ -522,6 +501,43 @@ public class RSSOverview extends ListActivity implements Requeryable {
 			}
 		}
 		return true;
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		
+		if (resultCode != RESULT_OK || data == null) {
+			return;
+		}
+		
+		Uri uri = data.getData();
+		
+		if (uri == null) {
+			return;
+		}
+		
+		switch (requestCode) {
+			case ACTIVITY_IMPORTOPML_ID: {
+				try {
+					OPML.importFromUri(uri, this);
+				} catch (org.xml.sax.SAXException e) {
+					showDialog(DIALOG_ERROR_INVALIDIMPORTFILE);
+				} catch (Exception e) {
+					showDialog(DIALOG_ERROR_FEEDIMPORT);
+				}
+				break;
+			}
+			case ACTIVITY_EXPORTOPML_ID: {
+				try {
+					OPML.exportToUri(uri, this);
+					Toast.makeText(this, String.format(getString(R.string.message_exportedto), uri.toString()), Toast.LENGTH_LONG).show();
+				} catch (Exception e) {
+					showDialog(DIALOG_ERROR_FEEDEXPORT);
+				}
+				break;
+			}
+		}
 	}
 	
 	public static final ContentValues getReadContentValues() {

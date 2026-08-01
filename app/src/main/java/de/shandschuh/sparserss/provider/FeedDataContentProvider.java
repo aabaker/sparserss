@@ -45,8 +45,6 @@ import android.text.TextUtils;
 import de.shandschuh.sparserss.Strings;
 
 public class FeedDataContentProvider extends ContentProvider {
-	private static final String FOLDER = Environment.getExternalStorageDirectory()+"/sparserss/";
-	
 	private static final String DATABASE_NAME = "sparserss.db";
 	
 	private static final int DATABASE_VERSION = 13;
@@ -80,8 +78,6 @@ public class FeedDataContentProvider extends ContentProvider {
 	public static final String IMAGEFOLDER = Environment.getExternalStorageDirectory()+"/sparserss/images/"; // faster than FOLDER+"images/"
 	
 	public static final File IMAGEFOLDER_FILE = new File(IMAGEFOLDER);
-	
-	private static final String BACKUPOPML = Environment.getExternalStorageDirectory()+"/sparserss/backup.opml";
 	
 	private static UriMatcher URI_MATCHER;
 	
@@ -124,13 +120,6 @@ public class FeedDataContentProvider extends ContentProvider {
 		public void onCreate(SQLiteDatabase database) {
 			database.execSQL(createTable(TABLE_FEEDS, FeedData.FeedColumns.COLUMNS, FeedData.FeedColumns.TYPES));
 			database.execSQL(createTable(TABLE_ENTRIES, FeedData.EntryColumns.COLUMNS, FeedData.EntryColumns.TYPES));
-			
-			File backupFile = new File(BACKUPOPML);
-			
-			if (backupFile.exists()) {
-				/** Perform an automated import of the backup */
-				OPML.importFromFile(backupFile, database);
-			}
 		}
 		
 		private String createTable(String tableName, String[] columns, String[] types) {
@@ -275,7 +264,6 @@ public class FeedDataContentProvider extends ContentProvider {
 					oldDatabaseFile.delete();
 					newDatabase.setTransactionSuccessful();
 					newDatabase.endTransaction();
-					OPML.exportToFile(BACKUPOPML, newDatabase);
 				} catch (Exception e) {
 					
 				}
@@ -365,9 +353,6 @@ public class FeedDataContentProvider extends ContentProvider {
 		
 		int count = database.delete(table, where.toString(), selectionArgs);
 		
-		if (table == TABLE_FEEDS) { // == is ok here
-			OPML.exportToFile(BACKUPOPML, database);
-		}
 		if (count > 0) {
 			getContext().getContentResolver().notifyChange(uri, null);
 			getContext().sendBroadcast(new Intent(Strings.ACTION_UPDATEWIDGET));
@@ -411,7 +396,6 @@ public class FeedDataContentProvider extends ContentProvider {
 				}
 				cursor.close();
 				newId = database.insert(TABLE_FEEDS, null, values);
-				OPML.exportToFile(BACKUPOPML, database);
 				break;
 			}
 			case URI_ENTRIES : {
@@ -435,13 +419,6 @@ public class FeedDataContentProvider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
-		try {
-			File folder = new File(FOLDER);
-			
-			folder.mkdir(); // maybe we use the boolean return value later
-		} catch (Exception e) {
-			
-		}
 		databaseHelper = new DatabaseHelper(getContext(), DATABASE_NAME, DATABASE_VERSION);
 		return true;
 	}
@@ -580,9 +557,6 @@ public class FeedDataContentProvider extends ContentProvider {
 		
 		int count = database.update(table, values, where.toString(), selectionArgs);
 		
-		if (table == TABLE_FEEDS && (values.containsKey(FeedData.FeedColumns.NAME) || values.containsKey(FeedData.FeedColumns.URL) || values.containsKey(FeedData.FeedColumns.PRIORITY))) { // == is ok here
-			OPML.exportToFile(BACKUPOPML, database);
-		}
 		if (count > 0) {
 			getContext().getContentResolver().notifyChange(uri, null);
 		}

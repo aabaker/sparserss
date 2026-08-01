@@ -52,4 +52,4 @@ docker run --rm \
     ${RELEASE_STORE_FILE:+-e RELEASE_STORE_FILE} \
     -v "$(pwd)":/project \
     mingc/android-build-box \
-    bash -c "chmod +x gradlew && ./gradlew assembleRelease"
+    bash -c "./gradlew assembleRelease"
