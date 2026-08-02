@@ -45,7 +45,7 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import android.app.IntentService;
-import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentValues;
@@ -57,10 +57,14 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Xml;
+
+import androidx.core.app.NotificationCompat;
+
 import de.shandschuh.sparserss.BASE64;
 import de.shandschuh.sparserss.MainTabActivity;
 import de.shandschuh.sparserss.R;
@@ -94,6 +98,8 @@ public class FetcherService extends IntentService {
 	private static final String ZERO = "0";
 	
 	private static final String GZIP = "gzip";
+	
+	private static final String NOTIFICATION_CHANNEL_ID = "feed_updates";
 	
 	/* Allow different positions of the "rel" attribute w.r.t. the "href" attribute */
 	private static final Pattern feedLinkPattern = Pattern.compile("[.]*<link[^>]* ((rel=alternate|rel=\"alternate\")[^>]* href=\"[^\"]*\"|href=\"[^\"]*\"[^>]* (rel=alternate|rel=\"alternate\"))[^>]*>", Pattern.CASE_INSENSITIVE);
@@ -160,27 +166,30 @@ public class FetcherService extends IntentService {
 					
 					String text = new StringBuilder().append(newCount).append(' ').append(getString(R.string.newentries)).toString();
 					
-					Notification notification = new Notification(R.drawable.ic_statusbar_rss, text, System.currentTimeMillis());
-					
 					Intent notificationIntent = new Intent(FetcherService.this, MainTabActivity.class);
 					
-					PendingIntent contentIntent = PendingIntent.getActivity(FetcherService.this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+					PendingIntent contentIntent = PendingIntent.getActivity(FetcherService.this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+					
+					NotificationCompat.Builder builder = new NotificationCompat.Builder(FetcherService.this, NOTIFICATION_CHANNEL_ID)
+						.setSmallIcon(R.drawable.ic_statusbar_rss)
+						.setTicker(text)
+						.setWhen(System.currentTimeMillis())
+						.setContentTitle(getString(R.string.rss_feeds))
+						.setContentText(text)
+						.setContentIntent(contentIntent)
+						.setAutoCancel(true)
+						.setLights(0xffffffff, 300, 1000);
 					
 					if (preferences.getBoolean(Strings.SETTINGS_NOTIFICATIONSVIBRATE, false)) {
-						notification.defaults = Notification.DEFAULT_VIBRATE;
+						builder.setDefaults(NotificationCompat.DEFAULT_VIBRATE);
 					}
-					notification.flags = Notification.FLAG_AUTO_CANCEL | Notification.FLAG_SHOW_LIGHTS;
-					notification.ledARGB = 0xffffffff;
-					notification.ledOnMS = 300;
-					notification.ledOffMS = 1000;
 					
 					String ringtone = preferences.getString(Strings.SETTINGS_NOTIFICATIONSRINGTONE, null);
 					
 					if (ringtone != null && ringtone.length() > 0) {
-						notification.sound = Uri.parse(ringtone);
+						builder.setSound(Uri.parse(ringtone));
 					}
-					notification.setLatestEventInfo(FetcherService.this, getString(R.string.rss_feeds), text, contentIntent);
-					notificationManager.notify(0, notification);
+					notificationManager.notify(0, builder.build());
 				} else {
 					notificationManager.cancel(0);
 				}
@@ -197,6 +206,11 @@ public class FetcherService extends IntentService {
 	public void onCreate() {
 		super.onCreate();
 		notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, getString(R.string.rss_feeds), NotificationManager.IMPORTANCE_DEFAULT);
+			
+			notificationManager.createNotificationChannel(channel);
+		}
 	}
 	
 	@Override

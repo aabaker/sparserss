@@ -89,7 +89,7 @@ public class RefreshService extends Service {
 
 	private void restartTimer(boolean created) {
 		if (timerIntent == null) {
-			timerIntent = PendingIntent.getBroadcast(this, 0, refreshBroadcastIntent, 0);
+			timerIntent = PendingIntent.getBroadcast(this, 0, refreshBroadcastIntent, PendingIntent.FLAG_IMMUTABLE);
 		} else {
 			alarmManager.cancel(timerIntent);
 		}

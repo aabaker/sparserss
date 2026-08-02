@@ -26,13 +26,13 @@
 package de.shandschuh.sparserss.provider;
 
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -41,7 +41,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Xml;
 import de.shandschuh.sparserss.Strings;
@@ -65,59 +65,49 @@ public class OPML {
 	
 	private static OPMLParser parser = new OPMLParser();
 	
-	public static void importFromFile(String filename, Context context) throws FileNotFoundException, IOException, SAXException {
+	/**
+	 * Imports from a content:// (or file://) Uri, such as one returned by an
+	 * ACTION_OPEN_DOCUMENT / ACTION_GET_CONTENT picker. This is the entry point that must be
+	 * used for user-picked files on API 19+: it goes through ContentResolver rather than
+	 * assuming a raw filesystem path is readable, since scoped storage (API 29+) generally
+	 * prevents apps from opening arbitrary paths directly even when the user picked the file.
+	 */
+	public static void importFromUri(Uri uri, Context context) throws IOException, SAXException {
 		parser.context = context;
-		parser.database = null;
-		Xml.parse(new InputStreamReader(new FileInputStream(filename)), parser);
-	}
-	
-	protected static void importFromInputStream(InputStream inputStream, SQLiteDatabase database) {
-		parser.context = null;
-		parser.database = database;
+		
+		InputStream inputStream = context.getContentResolver().openInputStream(uri);
+		
+		if (inputStream == null) {
+			throw new FileNotFoundException(uri.toString());
+		}
 		try {
-			database.beginTransaction();
 			Xml.parse(new InputStreamReader(inputStream), parser);
-			
-			/** This is ok since the database is empty */
-			database.execSQL(new StringBuilder("UPDATE ").append(FeedDataContentProvider.TABLE_FEEDS).append(" SET ").append(FeedData.FeedColumns.PRIORITY).append('=').append(FeedData.FeedColumns._ID).append("-1").toString());
-			database.setTransactionSuccessful();
-		} catch (Exception e) {
-			
 		} finally {
-			database.endTransaction();
+			inputStream.close();
 		}
 	}
 	
-	protected static void importFromFile(File file, SQLiteDatabase database) {
-		try {
-			importFromInputStream(new FileInputStream(file), database);
-		} catch (FileNotFoundException e) {
-			// do nothing
-		}
-	}
-	
-	public static void exportToFile(String filename, Context context) throws IOException {
+	/**
+	 * Exports to a content:// (or file://) Uri, such as one returned by an
+	 * ACTION_CREATE_DOCUMENT picker. See importFromUri() for why this is needed instead of a
+	 * raw filesystem path on API 29+.
+	 */
+	public static void exportToUri(Uri uri, Context context) throws IOException {
 		Cursor cursor = context.getContentResolver().query(FeedData.FeedColumns.CONTENT_URI, new String[] {FeedData.FeedColumns._ID, FeedData.FeedColumns.NAME, FeedData.FeedColumns.URL, FeedData.FeedColumns.WIFIONLY}, null, null, null);
 		
 		try {
-			writeData(filename, cursor);
+			OutputStream outputStream = context.getContentResolver().openOutputStream(uri);
+			
+			if (outputStream == null) {
+				throw new FileNotFoundException(uri.toString());
+			}
+			writeData(new BufferedWriter(new OutputStreamWriter(outputStream)), cursor);
 		} finally {
 			cursor.close();
 		}
 	}
 	
-	protected static void exportToFile(String filename, SQLiteDatabase database) {
-		Cursor cursor = database.query(FeedDataContentProvider.TABLE_FEEDS, new String[] {FeedData.FeedColumns._ID, FeedData.FeedColumns.NAME, FeedData.FeedColumns.URL, FeedData.FeedColumns.WIFIONLY}, null, null, null, null, FeedData.FEED_DEFAULTSORTORDER);
-		
-		try {
-			writeData(filename, cursor);
-		} catch (Exception e) {
-			
-		}
-		cursor.close();
-	}
-	
-	private static void writeData(String filename, Cursor cursor) throws IOException {
+	private static void writeData(Writer writer, Cursor cursor) throws IOException {
 		StringBuilder builder = new StringBuilder(START);
 		
 		builder.append(System.currentTimeMillis());
@@ -136,8 +126,6 @@ public class OPML {
 		}
 		builder.append(CLOSING);
 		
-		BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
-
 		writer.write(builder.toString());
 		writer.close();
 	}
@@ -159,8 +147,6 @@ public class OPML {
 		
 		private Context context;
 		
-		private SQLiteDatabase database;
-		
 		@Override
 		public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 			if (!bodyTagEntered) {
@@ -180,16 +166,12 @@ public class OPML {
 					values.put(FeedData.FeedColumns.NAME, title != null && title.length() > 0 ? title : null);
 					values.put(FeedData.FeedColumns.WIFIONLY, ATTRIBUTE_CATEGORY_VALUE.equals(attributes.getValue(Strings.EMPTY, ATTRIBUTE_CATEGORY)) ? 1 : 0);
 					
-					if (context != null) {
-						Cursor cursor = context.getContentResolver().query(FeedData.FeedColumns.CONTENT_URI, null, new StringBuilder(FeedData.FeedColumns.URL).append(Strings.DB_ARG).toString(), new String[] {url}, null);
-						
-						if (!cursor.moveToFirst()) {
-							context.getContentResolver().insert(FeedData.FeedColumns.CONTENT_URI, values);
-						}
-						cursor.close();
-					} else { // this happens only, if the db is new and therefore empty
-						database.insert(FeedDataContentProvider.TABLE_FEEDS, null, values);
+					Cursor cursor = context.getContentResolver().query(FeedData.FeedColumns.CONTENT_URI, null, new StringBuilder(FeedData.FeedColumns.URL).append(Strings.DB_ARG).toString(), new String[] {url}, null);
+					
+					if (!cursor.moveToFirst()) {
+						context.getContentResolver().insert(FeedData.FeedColumns.CONTENT_URI, values);
 					}
+					cursor.close();
 				}
 			}
 		}
