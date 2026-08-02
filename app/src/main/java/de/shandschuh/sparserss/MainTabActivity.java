@@ -124,7 +124,7 @@ public class MainTabActivity extends TabActivity {
 	protected void onResume() {
 		super.onResume();
 		internalSetProgressBarIndeterminateVisibility(isCurrentlyRefreshing());
-		registerReceiver(refreshReceiver, new IntentFilter("de.shandschuh.sparserss.REFRESH"));
+		registerReceiver(refreshReceiver, new IntentFilter("de.shandschuh.sparserss.REFRESH"), RECEIVER_NOT_EXPORTED);
 	}
 	
 	@Override
