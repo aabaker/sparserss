@@ -109,6 +109,8 @@ public class RSSOverview extends ListActivity implements Requeryable {
 	public void onCreate(Bundle savedInstanceState) {
 		if (MainTabActivity.isLightTheme(this)) {
 			setTheme(R.style.Theme_Light);
+		} else {
+			setTheme(R.style.Theme_Dark);
 		}
 		super.onCreate(savedInstanceState);
 

@@ -94,6 +94,8 @@ public class EntriesListActivity extends ListActivity implements Requeryable {
 	protected void onCreate(Bundle savedInstanceState) {
 		if (MainTabActivity.isLightTheme(this)) {
 			setTheme(R.style.Theme_Light);
+		} else {
+			setTheme(R.style.Theme_Dark);
 		}
 		
 		super.onCreate(savedInstanceState);
