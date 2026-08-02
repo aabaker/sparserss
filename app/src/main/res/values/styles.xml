@@ -1,6 +1,9 @@
 <resources>
-    <style name="Theme.Light" parent="android:Theme.Light"/>
-    <style name="ButtonBar" parent="android:ButtonBar"/>
-    <style name="Theme.Dialog" parent="@android:style/Theme.Dialog"/>
-    <style name="Widget.Button.Dialog" parent="@android:style/Widget.Button"/>
+    <style name="Theme.Dark" parent="android:Theme.DeviceDefault"/>
+    <style name="Theme.Light" parent="android:Theme.DeviceDefault.Light">
+        <item name="android:textColorPrimary">@color/list_text_primary_light</item>
+    </style>
+    <style name="ButtonBar" parent="@android:style/DeviceDefault.ButtonBar.AlertDialog"/>
+    <style name="Theme.Dialog" parent="android:Theme.DeviceDefault.Dialog"/>
+    <style name="Widget.Button.Dialog" parent="@android:style/Widget.DeviceDefault.Button.Borderless"/>
 </resources>

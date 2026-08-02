@@ -100,6 +100,8 @@ public class MainTabActivity extends TabActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		if (isLightTheme(this)) {
 			setTheme(R.style.Theme_Light);
+		} else {
+			setTheme(R.style.Theme_Dark);
 		}
 		super.onCreate(savedInstanceState);
 		

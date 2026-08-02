@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Read feeds/entries: darker grey than the platform default so it stays readable on white -->
+    <item android:state_enabled="false" android:color="#5A5A5A"/>
+    <!-- Unread feeds/entries -->
+    <item android:color="#000000"/>
+</selector>

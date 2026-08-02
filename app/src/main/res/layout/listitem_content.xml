@@ -11,6 +11,7 @@
         android:singleLine="true"
         android:layout_below="@android:id/text1"
         android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="?android:attr/textColorPrimary"
         android:layout_marginLeft="11dip"
         android:layout_marginRight="19dip"
         android:layout_width="wrap_content"
