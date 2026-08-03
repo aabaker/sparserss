@@ -61,6 +61,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.util.Xml;
 
 import androidx.core.app.NotificationCompat;
@@ -100,7 +101,9 @@ public class FetcherService extends IntentService {
 	private static final String GZIP = "gzip";
 	
 	private static final String NOTIFICATION_CHANNEL_ID = "feed_updates";
-	
+
+	private static final String TAG = "FetcherService";
+
 	/* Allow different positions of the "rel" attribute w.r.t. the "href" attribute */
 	private static final Pattern feedLinkPattern = Pattern.compile("[.]*<link[^>]* ((rel=alternate|rel=\"alternate\")[^>]* href=\"[^\"]*\"|href=\"[^\"]*\"[^>]* (rel=alternate|rel=\"alternate\"))[^>]*>", Pattern.CASE_INSENSITIVE);
 	
@@ -138,6 +141,9 @@ public class FetcherService extends IntentService {
 			editor.putLong(Strings.PREFERENCE_LASTSCHEDULEDREFRESH, SystemClock.elapsedRealtime());
 			editor.commit();
 		}
+
+		Log.d(TAG, "onHandleIntent: scheduled=" + intent.getBooleanExtra(Strings.SCHEDULED, false)
+			+ " feedId=" + intent.getStringExtra(Strings.FEEDID));
 		
 		ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 		
@@ -151,6 +157,7 @@ public class FetcherService extends IntentService {
 					proxy = null;
 				}
 			} else {
+				Log.w(TAG, "Skipping refresh: no connected network (networkInfo=" + networkInfo + ")");
 				proxy = null;
 			}
 			
@@ -260,14 +267,15 @@ public class FetcherService extends IntentService {
 		
 		while(!destroyed && cursor.moveToNext()) {
 			String id = cursor.getString(idPosition);
+			String feedUrl = cursor.getString(urlPosition);
 			
 			boolean imposeUserAgent = !cursor.isNull(imposeUseragentPosition) && cursor.getInt(imposeUseragentPosition) == 1;
 			
 			HttpURLConnection connection = null;
+
+			Log.d(TAG, "Refreshing feed id=" + id + " url=" + feedUrl);
 			
 			try {
-				String feedUrl = cursor.getString(urlPosition);
-				
 				connection = setupConnection(feedUrl, imposeUserAgent, followHttpHttpsRedirects);
 				
 				String redirectHost = connection.getURL().getHost(); // Feed icon should be fetched from target site, not from feedburner, so we're tracking all redirections
@@ -494,6 +502,7 @@ public class FetcherService extends IntentService {
 				}
 				connection.disconnect();
 			} catch (FileNotFoundException e) {
+				Log.w(TAG, "Feed not found (404) id=" + id + " url=" + feedUrl);
 				if (!handler.isDone() && !handler.isCancelled()) {
 					ContentValues values = new ContentValues();
 					values.put(FeedData.FeedColumns.FETCHMODE, 0); // resets the fetchmode to determine it again later
@@ -501,6 +510,7 @@ public class FetcherService extends IntentService {
 					context.getContentResolver().update(FeedData.FeedColumns.CONTENT_URI(id), values, null, null);
 				}
 			} catch (Throwable e) {
+				Log.e(TAG, "Failed to refresh feed id=" + id + " url=" + feedUrl, e);
 				if (!handler.isDone() && !handler.isCancelled()) {
 					ContentValues values = new ContentValues();
 					values.put(FeedData.FeedColumns.FETCHMODE, 0); // resets the fetchmode to determine it again later

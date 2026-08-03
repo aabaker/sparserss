@@ -28,16 +28,30 @@ package de.shandschuh.sparserss;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import de.shandschuh.sparserss.service.FetcherService;
 
 public class RefreshBroadcastReceiver extends BroadcastReceiver {
+
+	private static final String TAG = "RefreshReceiver";
+
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		if (Strings.ACTION_REFRESHFEEDS.equals(intent.getAction())) {
-			context.startService(new Intent(context, FetcherService.class).putExtras(intent)); // a thread would mark the process as inactive
-		} else if (Strings.ACTION_STOPREFRESHFEEDS.equals(intent.getAction())) {
+		String action = intent.getAction();
+
+		Log.d(TAG, "onReceive action=" + action);
+
+		if (Strings.ACTION_REFRESHFEEDS.equals(action)) {
+			try {
+				context.startService(new Intent(context, FetcherService.class).putExtras(intent)); // a thread would mark the process as inactive
+			} catch (Exception e) {
+				Log.e(TAG, "startService(FetcherService) failed", e);
+			}
+		} else if (Strings.ACTION_STOPREFRESHFEEDS.equals(action)) {
 			context.stopService(new Intent(context, FetcherService.class));
+		} else {
+			Log.w(TAG, "onReceive: unrecognized action " + action);
 		}
 	}
-	
+
 }

@@ -53,6 +53,7 @@ import android.view.Window;
 import android.widget.TabHost;
 import android.widget.TabHost.OnTabChangeListener;
 import android.widget.TextView;
+import android.Manifest;
 import de.shandschuh.sparserss.provider.FeedData;
 import de.shandschuh.sparserss.service.FetcherService;
 
@@ -104,7 +105,11 @@ public class MainTabActivity extends TabActivity {
 			setTheme(R.style.Theme_Dark);
 		}
 		super.onCreate(savedInstanceState);
-		
+		/*if (Build.VERSION.SDK_INT >= 33 &&
+				checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+			requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_CODE_NOTIFICATIONS);
+		}*/
+
 		// We need to display progress information
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		

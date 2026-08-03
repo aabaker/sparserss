@@ -33,6 +33,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.IBinder;
+import de.shandschuh.sparserss.RefreshBroadcastReceiver;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import de.shandschuh.sparserss.Strings;
@@ -81,7 +82,7 @@ public class RefreshService extends Service {
 			preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		}
 		
-		refreshBroadcastIntent = new Intent(Strings.ACTION_REFRESHFEEDS).putExtra(Strings.SCHEDULED, true);
+		refreshBroadcastIntent = new Intent(Strings.ACTION_REFRESHFEEDS).setClass(this, RefreshBroadcastReceiver.class).putExtra(Strings.SCHEDULED, true);
 		alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 		preferences.registerOnSharedPreferenceChangeListener(listener);
 		restartTimer(true);
