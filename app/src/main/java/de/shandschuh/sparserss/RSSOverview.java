@@ -234,7 +234,7 @@ public class RSSOverview extends ListActivity implements Requeryable {
 		if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Strings.SETTINGS_REFRESHONPENENABLED, false)) {
 			new Thread() {
 				public void run() {
-					sendBroadcast(new Intent(Strings.ACTION_REFRESHFEEDS));
+					sendBroadcast(new Intent(Strings.ACTION_REFRESHFEEDS).setClass(RSSOverview.this, RefreshBroadcastReceiver.class));
 				}
 			}.start();
 		}
@@ -291,11 +291,13 @@ public class RSSOverview extends ListActivity implements Requeryable {
 			}
 			case R.id.menu_refresh: {
 				if (MainTabActivity.INSTANCE.isProgressBarVisible()) {
-					sendBroadcast(new Intent(Strings.ACTION_STOPREFRESHFEEDS));
+					sendBroadcast(new Intent(Strings.ACTION_STOPREFRESHFEEDS).setClass(RSSOverview.this, RefreshBroadcastReceiver.class));
 				} else {
 					new Thread() {
 						public void run() {
-							sendBroadcast(new Intent(Strings.ACTION_REFRESHFEEDS).putExtra(Strings.SETTINGS_OVERRIDEWIFIONLY, PreferenceManager.getDefaultSharedPreferences(RSSOverview.this).getBoolean(Strings.SETTINGS_OVERRIDEWIFIONLY, false)));
+							sendBroadcast(new Intent(Strings.ACTION_REFRESHFEEDS)
+									.setClass(RSSOverview.this, RefreshBroadcastReceiver.class)
+									.putExtra(Strings.SETTINGS_OVERRIDEWIFIONLY, PreferenceManager.getDefaultSharedPreferences(RSSOverview.this).getBoolean(Strings.SETTINGS_OVERRIDEWIFIONLY, false)));
 						}
 					}.start();
 				}
@@ -313,7 +315,7 @@ public class RSSOverview extends ListActivity implements Requeryable {
 				final NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
 				
 				if (networkInfo != null && networkInfo.getState() == NetworkInfo.State.CONNECTED) { // since we have acquired the networkInfo, we use it for basic checks
-					final Intent intent = new Intent(Strings.ACTION_REFRESHFEEDS).putExtra(Strings.FEEDID, id);
+					final Intent intent = new Intent(Strings.ACTION_REFRESHFEEDS).setClass(RSSOverview.this, RefreshBroadcastReceiver.class).putExtra(Strings.FEEDID, id);
 					
 					final Thread thread = new Thread() {
 						public void run() {
