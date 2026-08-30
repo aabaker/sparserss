@@ -117,7 +117,9 @@ public class RSSHandler extends DefaultHandler {
 	private static final String ATTRIBUTE_LENGTH = "length";
 	
 	private static final String ATTRIBUTE_REL = "rel";
-	
+
+	private static final String RELATIONSHIP_ALTERNATE = "alternate";
+
 	private static final String UTF8 = "UTF-8";
 	
 	private static final String PERCENT = "%";
@@ -349,8 +351,12 @@ public class RSSHandler extends DefaultHandler {
 			if (authorTagEntered) {
 				return;
 			}
-			if (TAG_ENCLOSURE.equals(attributes.getValue(Strings.EMPTY, ATTRIBUTE_REL))) {
+			String rel = attributes.getValue(Strings.EMPTY, ATTRIBUTE_REL);
+
+			if (TAG_ENCLOSURE.equals(rel)) {
 				startEnclosure(attributes, attributes.getValue(Strings.EMPTY, ATTRIBUTE_HREF));
+			} else if (rel != null && !RELATIONSHIP_ALTERNATE.equals(rel)) {
+				// this is some other Atom link relation (self, replies, edit, hub, ...) -- so leave entryLink untouched
 			} else if (entryLink == null || qName.equals(localName)) {
 				// this indicates either there is no link yet or it is a non prefix tag which is preferred
 				entryLink = new StringBuilder();
