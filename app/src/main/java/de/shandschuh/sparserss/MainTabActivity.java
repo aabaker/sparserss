@@ -70,10 +70,6 @@ public class MainTabActivity extends TabActivity {
 	
 	public static MainTabActivity INSTANCE;
 	
-	public static final boolean POSTGINGERBREAD = !Build.VERSION.RELEASE.startsWith("1") &&
-		!Build.VERSION.RELEASE.startsWith("2"); // this way around is future save
-	
-	
 	private static Boolean LIGHTTHEME;
 	
 	public static boolean isLightTheme(Context context) {
@@ -226,31 +222,22 @@ public class MainTabActivity extends TabActivity {
 			setTabWidgetVisible(true);
 		}
 		final MainTabActivity mainTabActivity = this;
-		if (POSTGINGERBREAD) {
-			/* Change the menu also on ICS when tab is changed */
-			tabHost.setOnTabChangedListener(new OnTabChangeListener() {
-				public void onTabChanged(String tabId) {
-					if (menu != null) {
-						menu.clear();
-						onCreateOptionsMenu(menu);
-					}
-					SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(mainTabActivity).edit();
-					editor.putString(Strings.PREFERENCE_LASTTAB, tabId);
-					editor.commit();
-					setCurrentTab(tabId);
+		/* Change the menu also on ICS when tab is changed */
+		tabHost.setOnTabChangedListener(new OnTabChangeListener() {
+			public void onTabChanged(String tabId) {
+				if (menu != null) {
+					menu.clear();
+					onCreateOptionsMenu(menu);
 				}
-			});
-			if (menu != null) {
-				menu.clear();
-				onCreateOptionsMenu(menu);
+				SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(mainTabActivity).edit();
+				editor.putString(Strings.PREFERENCE_LASTTAB, tabId);
+				editor.commit();
+				setCurrentTab(tabId);
 			}
-		} else {
-			tabHost.setOnTabChangedListener(new OnTabChangeListener() {
-				@Override
-				public void onTabChanged(String tabId) {
-					setCurrentTab(tabId);
-				}
-			});
+		});
+		if (menu != null) {
+			menu.clear();
+			onCreateOptionsMenu(menu);
 		}
 	}
 	
