@@ -41,7 +41,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.KeyEvent;
@@ -69,10 +68,6 @@ public class MainTabActivity extends TabActivity {
 	private static final String TAG_FAVORITE = "favorite";
 	
 	public static MainTabActivity INSTANCE;
-	
-	public static final boolean POSTGINGERBREAD = !Build.VERSION.RELEASE.startsWith("1") &&
-		!Build.VERSION.RELEASE.startsWith("2"); // this way around is future save
-	
 	
 	private static Boolean LIGHTTHEME;
 	
@@ -105,6 +100,7 @@ public class MainTabActivity extends TabActivity {
 			setTheme(R.style.Theme_Dark);
 		}
 		super.onCreate(savedInstanceState);
+		// If this check gets reinstated then need to import android.os.Build
 		/*if (Build.VERSION.SDK_INT >= 33 &&
 				checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
 			requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_CODE_NOTIFICATIONS);
@@ -226,31 +222,22 @@ public class MainTabActivity extends TabActivity {
 			setTabWidgetVisible(true);
 		}
 		final MainTabActivity mainTabActivity = this;
-		if (POSTGINGERBREAD) {
-			/* Change the menu also on ICS when tab is changed */
-			tabHost.setOnTabChangedListener(new OnTabChangeListener() {
-				public void onTabChanged(String tabId) {
-					if (menu != null) {
-						menu.clear();
-						onCreateOptionsMenu(menu);
-					}
-					SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(mainTabActivity).edit();
-					editor.putString(Strings.PREFERENCE_LASTTAB, tabId);
-					editor.commit();
-					setCurrentTab(tabId);
+		/* Change the menu also on ICS when tab is changed */
+		tabHost.setOnTabChangedListener(new OnTabChangeListener() {
+			public void onTabChanged(String tabId) {
+				if (menu != null) {
+					menu.clear();
+					onCreateOptionsMenu(menu);
 				}
-			});
-			if (menu != null) {
-				menu.clear();
-				onCreateOptionsMenu(menu);
+				SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(mainTabActivity).edit();
+				editor.putString(Strings.PREFERENCE_LASTTAB, tabId);
+				editor.commit();
+				setCurrentTab(tabId);
 			}
-		} else {
-			tabHost.setOnTabChangedListener(new OnTabChangeListener() {
-				@Override
-				public void onTabChanged(String tabId) {
-					setCurrentTab(tabId);
-				}
-			});
+		});
+		if (menu != null) {
+			menu.clear();
+			onCreateOptionsMenu(menu);
 		}
 	}
 	

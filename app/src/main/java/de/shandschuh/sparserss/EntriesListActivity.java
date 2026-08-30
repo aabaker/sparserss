@@ -49,7 +49,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnCreateContextMenuListener;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -122,12 +121,6 @@ public class EntriesListActivity extends ListActivity implements Requeryable {
 			hideRead = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(new StringBuilder(uri.equals(FeedData.EntryColumns.FAVORITES_CONTENT_URI) ? FAVORITES : ALLENTRIES).append('.').append(FeedData.FeedColumns.HIDE_READ).toString(), false);
 		}
 		
-		if (!MainTabActivity.POSTGINGERBREAD && iconBytes != null && iconBytes.length > 0) { // we cannot insert the icon here because it would be overwritten, but we have to reserve the icon here
-			if (!requestWindowFeature(Window.FEATURE_LEFT_ICON)) {
-				iconBytes = null;
-			}
-		}
-		
 		setContentView(R.layout.entries);
 		
 		entriesListAdapter = new EntriesListAdapter(this, uri, intent.getBooleanExtra(EXTRA_SHOWFEEDINFO, false), intent.getBooleanExtra(EXTRA_AUTORELOAD, false), hideRead);
@@ -144,11 +137,7 @@ public class EntriesListActivity extends ListActivity implements Requeryable {
 					bitmap = Bitmap.createScaledBitmap(bitmap, bitmapSizeInDip, bitmapSizeInDip, false);
 				}
 				
-				if (MainTabActivity.POSTGINGERBREAD) {
-					CompatibilityHelper.setActionBarDrawable(this, new BitmapDrawable(bitmap));
-				} else {
-					setFeatureDrawable(Window.FEATURE_LEFT_ICON, new BitmapDrawable(bitmap));
-				}
+				CompatibilityHelper.setActionBarDrawable(this, new BitmapDrawable(bitmap));
 			}
 		}
 		if (RSSOverview.notificationManager != null) {
