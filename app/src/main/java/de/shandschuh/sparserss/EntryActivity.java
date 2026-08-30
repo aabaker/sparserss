@@ -151,8 +151,6 @@ public class EntryActivity extends Activity {
 	
 	private boolean hideRead;
 	
-	private boolean canShowIcon;
-	
 	private byte[] iconBytes;
 	
 	private String feedName;
@@ -197,7 +195,6 @@ public class EntryActivity extends Activity {
 		
 		int titleId = -1;
 		
-		canShowIcon = true;
 		setContentView(R.layout.entry);
 		try {
 			/* This is a trick as com.android.internal.R.id.action_bar_title is not directly accessible */
@@ -414,7 +411,7 @@ public class EntryActivity extends Activity {
 					feedId = _feedId;
 				}
 				
-				if (feedName == null || (canShowIcon && (iconBytes == null || iconBytes.length == 0))) {
+				if (feedName == null || iconBytes == null || iconBytes.length == 0) {
 					Cursor feedCursor = getContentResolver().query(FeedData.FeedColumns.CONTENT_URI(Integer.toString(feedId)), new String[] {FeedData.FeedColumns._ID, FeedData.FeedColumns.NAME, FeedData.FeedColumns.URL, FeedData.FeedColumns.ICON}, null, null, null);
 					if (feedCursor.moveToFirst()) {
 						feedName = feedCursor.isNull(1) ? feedCursor.getString(2) : feedCursor.getString(1);
@@ -423,23 +420,21 @@ public class EntryActivity extends Activity {
 					feedCursor.close();
 				}
 
-				if (canShowIcon) {
-					Drawable icon = null;
-					if (iconBytes != null && iconBytes.length > 0) {
-						int bitmapSizeInDip = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24f, getResources().getDisplayMetrics());
-						Bitmap bitmap = BitmapFactory.decodeByteArray(iconBytes, 0, iconBytes.length);
-						if (bitmap != null) {
-							if (bitmap.getHeight() != bitmapSizeInDip) {
-								bitmap = Bitmap.createScaledBitmap(bitmap, bitmapSizeInDip, bitmapSizeInDip, false);
-							}
-							icon = new BitmapDrawable(bitmap);
+				Drawable icon = null;
+				if (iconBytes != null && iconBytes.length > 0) {
+					int bitmapSizeInDip = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24f, getResources().getDisplayMetrics());
+					Bitmap bitmap = BitmapFactory.decodeByteArray(iconBytes, 0, iconBytes.length);
+					if (bitmap != null) {
+						if (bitmap.getHeight() != bitmapSizeInDip) {
+							bitmap = Bitmap.createScaledBitmap(bitmap, bitmapSizeInDip, bitmapSizeInDip, false);
 						}
+						icon = new BitmapDrawable(bitmap);
 					}
-					if (icon == null) {
-						icon = getResources().getDrawable(de.shandschuh.sparserss.R.drawable.icon);
-					}
-					CompatibilityHelper.setActionBarDrawable(this, icon);
 				}
+				if (icon == null) {
+					icon = getResources().getDrawable(de.shandschuh.sparserss.R.drawable.icon);
+				}
+				CompatibilityHelper.setActionBarDrawable(this, icon);
 				
 				long timestamp = entryCursor.getLong(datePosition);
 				
