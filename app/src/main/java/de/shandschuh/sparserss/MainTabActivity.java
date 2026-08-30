@@ -41,7 +41,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.KeyEvent;
@@ -101,6 +100,7 @@ public class MainTabActivity extends TabActivity {
 			setTheme(R.style.Theme_Dark);
 		}
 		super.onCreate(savedInstanceState);
+		// If this check gets reinstated then need to import android.os.Build
 		/*if (Build.VERSION.SDK_INT >= 33 &&
 				checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
 			requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_CODE_NOTIFICATIONS);
