@@ -59,7 +59,7 @@ public class WidgetConfigActivity extends PreferenceActivity {
 		if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
 			finish();
 		}
-		addPreferencesFromResource(R.layout.widgetpreferences);
+		addPreferencesFromResource(R.xml.widgetpreferences);
 		setContentView(R.layout.widgetconfig);
 		
 		final ListPreference entryCountPreference = (ListPreference) findPreference("widget.entrycount");
